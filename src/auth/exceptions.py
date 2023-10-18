@@ -45,4 +45,3 @@ class RefreshTokenNotValid(NotAuthenticated):
 
 class UserNotFound(NotFound):
     DETAIL = ErrorMessage.USER_NOT_FOUND
-

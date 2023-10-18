@@ -7,7 +7,7 @@ from pytz import timezone
 
 logger = logging.getLogger(__name__)
 alpha_num = string.ascii_letters + string.digits
-korea_timezone = timezone('Asia/Seoul')
+korea_timezone = timezone("Asia/Seoul")
 
 
 def get_kst_now() -> datetime:

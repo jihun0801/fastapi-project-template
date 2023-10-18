@@ -30,9 +30,8 @@ router = APIRouter()
     description="새로운 유저를 생성한다.",
 )
 async def create_user(
-        create_user_data: UserCreate = Depends(valid_user_create)
+    create_user_data: UserCreate = Depends(valid_user_create),
 ) -> UserDetail:
-
     return await service.create_user(create_user_data)
 
 
@@ -40,10 +39,9 @@ async def create_user(
     Path.READ_USER_ME,
     status_code=status.HTTP_200_OK,
     response_model=UserDetail,
-    description="내 정보를 확인한다."
+    description="내 정보를 확인한다.",
 )
 async def get_me(jwt_data: JWTData = Depends(parse_jwt_data)) -> UserDetail:
-
     return await service.get_user_by_id(jwt_data.user_id)
 
 
@@ -51,10 +49,9 @@ async def get_me(jwt_data: JWTData = Depends(parse_jwt_data)) -> UserDetail:
     Path.READ_USER,
     status_code=status.HTTP_200_OK,
     response_model=User,
-    description="유저 정보를 확인한다."
+    description="유저 정보를 확인한다.",
 )
 async def get_user(user_nick_name: str = Depends(valid_user_nick_name)) -> User:
-
     return await service.get_user_by_nick_name(user_nick_name)
 
 
@@ -80,7 +77,7 @@ async def login(login_data: Login, response: Response) -> AccessTokenResponse:
     Path.TOKEN_UPDATE,
     status_code=status.HTTP_200_OK,
     response_model=AccessTokenResponse,
-    description="기존 refresh token으로 refresh token과 access token을 재발급 받는다."
+    description="기존 refresh token으로 refresh token과 access token을 재발급 받는다.",
 )
 async def refresh_tokens(
     worker: BackgroundTasks,
@@ -88,7 +85,9 @@ async def refresh_tokens(
     refresh_token: dict[str, Any] = Depends(valid_refresh_token),
     user: dict[str, Any] = Depends(valid_refresh_token_user),
 ) -> AccessTokenResponse:
-    refresh_token_value = await service.create_refresh_token(user_id=refresh_token["user_id"])
+    refresh_token_value = await service.create_refresh_token(
+        user_id=refresh_token["user_id"]
+    )
     response.set_cookie(**utils.get_refresh_token_settings(refresh_token_value))
 
     worker.add_task(service.expire_refresh_token, refresh_token["uuid"])
@@ -100,11 +99,13 @@ async def refresh_tokens(
 
 
 @router.delete(
-    Path.LOGOUT,
-    status_code=status.HTTP_200_OK,
-    description="토큰을 만료하여 로그아웃을 수행한다."
+    Path.LOGOUT, status_code=status.HTTP_200_OK, description="토큰을 만료하여 로그아웃을 수행한다."
 )
-async def logout(response: Response, refresh_token: dict[str, Any] = Depends(valid_refresh_token)) -> None:
+async def logout(
+    response: Response, refresh_token: dict[str, Any] = Depends(valid_refresh_token)
+) -> None:
     await service.expire_refresh_token(refresh_token["uuid"])
 
-    response.delete_cookie(**utils.get_refresh_token_settings(refresh_token["refresh_token"], expired=True))
+    response.delete_cookie(
+        **utils.get_refresh_token_settings(refresh_token["refresh_token"], expired=True)
+    )

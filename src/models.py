@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class CustomModel(BaseModel):
-    model_config = ConfigDict(ser_json_timedelta='iso8601')
+    model_config = ConfigDict(ser_json_timedelta="iso8601")
 
     @model_validator(mode="before")
     @classmethod

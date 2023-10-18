@@ -5,23 +5,18 @@ from typing import Any
 from pydantic import UUID4
 from sqlalchemy import insert, select, update
 
-
 from src import utils
 from src.auth.config import auth_config
 from src.auth.exceptions import InvalidCredentials
 from src.auth.schemas import Login, UserCreate
-from src.auth.security import hash_password, check_password
+from src.auth.security import check_password, hash_password
 from src.database import auth_refresh_token, auth_user, execute, fetch_one
 
 
 async def create_user(create_user_data: UserCreate) -> dict[str, Any] | None:
     values = create_user_data.serializable_dict(exclude_defaults=True)
     values["login_password"] = hash_password(values["login_password"])
-    insert_query = (
-        insert(auth_user)
-        .values(values)
-        .returning(auth_user)
-    )
+    insert_query = insert(auth_user).values(values).returning(auth_user)
 
     return await fetch_one(insert_query)
 

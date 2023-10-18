@@ -4,14 +4,14 @@ from typing import Any
 
 from fastapi import Cookie, Depends
 
-from src.auth import utils as auth_utils
 from src.auth import service
+from src.auth import utils as auth_utils
 from src.auth.exceptions import (
+    InvalidPasswordPattern,
     LoginIdTaken,
     NickNameTaken,
     RefreshTokenNotValid,
     UserNotFound,
-    InvalidPasswordPattern,
 )
 from src.auth.schemas import UserCreate
 
@@ -22,8 +22,7 @@ async def valid_user_create(create_user_data: UserCreate) -> UserCreate:
     if await service.get_user_by_nick_name(create_user_data.nick_name):
         raise NickNameTaken()
     if not re.match(
-            auth_utils.STRONG_PASSWORD_PATTERN,
-            create_user_data.login_password
+        auth_utils.STRONG_PASSWORD_PATTERN, create_user_data.login_password
     ):
         raise InvalidPasswordPattern()
 

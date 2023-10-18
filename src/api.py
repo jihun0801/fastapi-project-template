@@ -14,4 +14,5 @@ main_router.include_router(auth_router, prefix=RouterPrefix.AUTH, tags=["Auth"])
 async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
+
 api_router.include_router(main_router)
