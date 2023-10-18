@@ -1,7 +1,11 @@
+import re
 from typing import Any
 
 from src.auth.config import auth_config
 from src.config import settings
+
+
+STRONG_PASSWORD_PATTERN = re.compile(r"^(?=.*[\d])(?=.*[!@#$%^&*])[\w!@#$%^&*]{6,128}$")
 
 
 def get_refresh_token_settings(

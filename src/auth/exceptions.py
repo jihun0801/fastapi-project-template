@@ -1,26 +1,48 @@
-from src.auth.constants import ErrorCode
-from src.exceptions import BadRequest, NotAuthenticated, PermissionDenied
+from src.auth.constants import ErrorMessage
+from src.exceptions import (
+    BadRequest,
+    NotAuthenticated,
+    NotFound,
+    PermissionDenied,
+)
 
 
 class AuthRequired(NotAuthenticated):
-    DETAIL = ErrorCode.AUTHENTICATION_REQUIRED
+    DETAIL = ErrorMessage.AUTHENTICATION_REQUIRED
 
 
 class AuthorizationFailed(PermissionDenied):
-    DETAIL = ErrorCode.AUTHORIZATION_FAILED
+    DETAIL = ErrorMessage.AUTHORIZATION_FAILED
 
 
 class InvalidToken(NotAuthenticated):
-    DETAIL = ErrorCode.INVALID_TOKEN
+    DETAIL = ErrorMessage.INVALID_TOKEN
+
+
+class ExpiredToken(NotAuthenticated):
+    DETAIL = ErrorMessage.EXPIRED_TOKEN
 
 
 class InvalidCredentials(NotAuthenticated):
-    DETAIL = ErrorCode.INVALID_CREDENTIALS
+    DETAIL = ErrorMessage.INVALID_CREDENTIALS
 
 
-class EmailTaken(BadRequest):
-    DETAIL = ErrorCode.EMAIL_TAKEN
+class LoginIdTaken(BadRequest):
+    DETAIL = ErrorMessage.LOGIN_ID_TAKEN
+
+
+class NickNameTaken(BadRequest):
+    DETAIL = ErrorMessage.NICK_NAME_TAKEN
+
+
+class InvalidPasswordPattern(BadRequest):
+    DETAIL = ErrorMessage.INVALID_PASSWORD_PATTERN
 
 
 class RefreshTokenNotValid(NotAuthenticated):
-    DETAIL = ErrorCode.REFRESH_TOKEN_NOT_VALID
+    DETAIL = ErrorMessage.REFRESH_TOKEN_NOT_VALID
+
+
+class UserNotFound(NotFound):
+    DETAIL = ErrorMessage.USER_NOT_FOUND
+

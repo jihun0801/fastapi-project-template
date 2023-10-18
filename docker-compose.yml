@@ -24,6 +24,7 @@ services:
       - POSTGRES_USER=app
       - POSTGRES_PASSWORD=app
       - POSTGRES_DB=app
+      - TZ=Asia/Seoul
     volumes:
       - app_pg_data:/var/lib/postgresql/data
     ports:
@@ -38,6 +39,8 @@ services:
       - '--requirepass myStrongPassword'
     ports:
       - 6379:6379
+    environment:
+      - TZ=Asia/Seoul
 
 volumes:
   app_pg_data:

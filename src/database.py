@@ -5,6 +5,7 @@ from sqlalchemy import (
     Column,
     CursorResult,
     DateTime,
+    Delete,
     ForeignKey,
     Identity,
     Insert,
@@ -28,18 +29,22 @@ DATABASE_URL = str(settings.DATABASE_URL)
 engine = create_async_engine(DATABASE_URL)
 metadata = MetaData(naming_convention=DB_NAMING_CONVENTION)
 
+
 auth_user = Table(
     "auth_user",
     metadata,
     Column("id", Integer, Identity(), primary_key=True),
-    Column("email", String, nullable=False),
-    Column("password", LargeBinary, nullable=False),
+    Column("login_id", String, nullable=False, unique=True),
+    Column("login_password", LargeBinary, nullable=False),
+    Column("user_name", String),
+    Column("nick_name", String, unique=True),
+    Column("image_url", String),
     Column("is_admin", Boolean, server_default="false", nullable=False),
     Column("created_at", DateTime, server_default=func.now(), nullable=False),
     Column("updated_at", DateTime, onupdate=func.now()),
 )
 
-refresh_tokens = Table(
+auth_refresh_token = Table(
     "auth_refresh_token",
     metadata,
     Column("uuid", UUID, primary_key=True),
@@ -51,18 +56,18 @@ refresh_tokens = Table(
 )
 
 
-async def fetch_one(select_query: Select | Insert | Update) -> dict[str, Any] | None:
+async def fetch_one(query: Select | Insert | Update) -> dict[str, Any] | None:
     async with engine.begin() as conn:
-        cursor: CursorResult = await conn.execute(select_query)
+        cursor: CursorResult = await conn.execute(query)
         return cursor.first()._asdict() if cursor.rowcount > 0 else None
 
 
-async def fetch_all(select_query: Select | Insert | Update) -> list[dict[str, Any]]:
+async def fetch_all(query: Select | Insert | Update) -> list[dict[str, Any]]:
     async with engine.begin() as conn:
-        cursor: CursorResult = await conn.execute(select_query)
+        cursor: CursorResult = await conn.execute(query)
         return [r._asdict() for r in cursor.all()]
 
 
-async def execute(select_query: Insert | Update) -> None:
+async def execute(query: Insert | Update | Delete) -> None:
     async with engine.begin() as conn:
-        await conn.execute(select_query)
+        await conn.execute(query)

@@ -9,6 +9,11 @@ DB_NAMING_CONVENTION = {
 }
 
 
+class RouterPrefix:
+    MAIN = "/app/v1"
+    AUTH = "/auth"
+
+
 class Environment(str, Enum):
     LOCAL = "LOCAL"
     STAGING = "STAGING"

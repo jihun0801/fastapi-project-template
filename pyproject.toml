@@ -1,5 +1,5 @@
 [tool.ruff]
-line-length = 88
+line-length = 79
 
 # Enable Pyflakes `E` and `F` codes by default.
 select = [
@@ -46,3 +46,48 @@ target-version = "py311"
 [tool.ruff.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
 max-complexity = 10
+
+
+[tool.poetry]
+name = "fastapi-project-template"
+version = "0.1.0"
+description = ""
+authors = ["jihun0801 <shield8486@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+redis = "==5.0.*"
+alembic = "==1.11.*"
+bcrypt = "==4.0.*"
+python-jose = "==3.3.*"
+sqlalchemy = "2.0.20"
+httpx = "==0.24.*"
+pydantic = {version = "==2.3.*", extras = ["email"]}
+pydantic-settings = "==2.0.*"
+asyncpg = "==0.28.*"
+fastapi = "==0.103.*"
+uvicorn = {version = "==0.23.*", extras = ["standard"]}
+sentry-sdk = "==1.29.*"
+psycopg2-binary = "^2.9.9"
+pytz = "^2023.3.post1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "23.7.0"
+ruff = "0.0.286"
+coverage = "7.3.0"
+mypy = "1.5.1"
+pytest = "7.4.0"
+pytest-asyncio = "0.21.1"
+async-asgi-testclient = "1.4.11"
+pytest-env = "1.0.1"
+
+
+[tool.poetry.group.prod.dependencies]
+python-json-logger = "^2.0.7"
+gunicorn = "^21.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

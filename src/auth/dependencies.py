@@ -1,18 +1,40 @@
+import re
 from datetime import datetime
 from typing import Any
 
 from fastapi import Cookie, Depends
 
+from src.auth import utils as auth_utils
 from src.auth import service
-from src.auth.exceptions import EmailTaken, RefreshTokenNotValid
-from src.auth.schemas import AuthUser
+from src.auth.exceptions import (
+    LoginIdTaken,
+    NickNameTaken,
+    RefreshTokenNotValid,
+    UserNotFound,
+    InvalidPasswordPattern,
+)
+from src.auth.schemas import UserCreate
 
 
-async def valid_user_create(user: AuthUser) -> AuthUser:
-    if await service.get_user_by_email(user.email):
-        raise EmailTaken()
+async def valid_user_create(create_user_data: UserCreate) -> UserCreate:
+    if await service.get_user_by_login_id(create_user_data.login_id):
+        raise LoginIdTaken()
+    if await service.get_user_by_nick_name(create_user_data.nick_name):
+        raise NickNameTaken()
+    if not re.match(
+            auth_utils.STRONG_PASSWORD_PATTERN,
+            create_user_data.login_password
+    ):
+        raise InvalidPasswordPattern()
 
-    return user
+    return create_user_data
+
+
+async def valid_user_nick_name(user_nick_name: str) -> str:
+    if not await service.get_user_by_nick_name(user_nick_name):
+        raise UserNotFound()
+
+    return user_nick_name
 
 
 async def valid_refresh_token(

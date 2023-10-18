@@ -1,29 +1,36 @@
-import re
+from typing import Optional
+from datetime import datetime
 
-from pydantic import EmailStr, Field, field_validator
+from pydantic import AnyUrl, Field
 
 from src.models import CustomModel
 
-STRONG_PASSWORD_PATTERN = re.compile(r"^(?=.*[\d])(?=.*[!@#$%^&*])[\w!@#$%^&*]{6,128}$")
+
+class User(CustomModel):
+    user_name: str
+    nick_name: str
+    image_url: str | None
 
 
-class AuthUser(CustomModel):
-    email: EmailStr
-    password: str = Field(min_length=6, max_length=128)
+class UserDetail(User):
+    id: int
+    login_id: str
+    is_admin: bool
+    created_at: datetime
+    updated_at: datetime | None
 
-    @field_validator("password", mode="after")
-    @classmethod
-    def valid_password(cls, password: str) -> str:
-        if not re.match(STRONG_PASSWORD_PATTERN, password):
-            raise ValueError(
-                "Password must contain at least "
-                "one lower character, "
-                "one upper character, "
-                "digit or "
-                "special symbol"
-            )
 
-        return password
+class UserCreate(CustomModel):
+    login_id: str
+    login_password: str
+    user_name: str
+    nick_name: str
+    image_url: Optional[AnyUrl] = None
+
+
+class Login(CustomModel):
+    login_id: str
+    login_password: str = Field(min_length=6, max_length=32)
 
 
 class JWTData(CustomModel):
@@ -34,7 +41,3 @@ class JWTData(CustomModel):
 class AccessTokenResponse(CustomModel):
     access_token: str
     refresh_token: str
-
-
-class UserResponse(CustomModel):
-    email: EmailStr
