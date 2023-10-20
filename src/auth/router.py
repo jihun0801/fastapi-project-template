@@ -1,6 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import jwt, service, utils
 from src.auth.constants import Path
@@ -19,6 +20,7 @@ from src.auth.schemas import (
     UserCreate,
     UserDetail,
 )
+from src.database.core import get_db_session
 
 router = APIRouter()
 
@@ -30,9 +32,12 @@ router = APIRouter()
     description="새로운 유저를 생성한다.",
 )
 async def create_user(
+    db_session: AsyncSession = Depends(get_db_session),
     create_user_data: UserCreate = Depends(valid_user_create),
 ) -> UserDetail:
-    return await service.create_user(create_user_data)
+    return await service.create_user(
+        db_session=db_session, create_user_data=create_user_data
+    )
 
 
 @router.get(
@@ -41,8 +46,11 @@ async def create_user(
     response_model=UserDetail,
     description="내 정보를 확인한다.",
 )
-async def get_me(jwt_data: JWTData = Depends(parse_jwt_data)) -> UserDetail:
-    return await service.get_user_by_id(jwt_data.user_id)
+async def get_me(
+    db_session: AsyncSession = Depends(get_db_session),
+    jwt_data: JWTData = Depends(parse_jwt_data),
+) -> UserDetail:
+    return await service.get_user_by_id(db_session=db_session, user_id=jwt_data.user_id)
 
 
 @router.get(
@@ -51,8 +59,13 @@ async def get_me(jwt_data: JWTData = Depends(parse_jwt_data)) -> UserDetail:
     response_model=User,
     description="유저 정보를 확인한다.",
 )
-async def get_user(user_nick_name: str = Depends(valid_user_nick_name)) -> User:
-    return await service.get_user_by_nick_name(user_nick_name)
+async def get_user(
+    db_session: AsyncSession = Depends(get_db_session),
+    user_nick_name: str = Depends(valid_user_nick_name),
+) -> User:
+    return await service.get_user_by_nick_name(
+        db_session=db_session, nick_name=user_nick_name
+    )
 
 
 @router.post(
@@ -61,11 +74,19 @@ async def get_user(user_nick_name: str = Depends(valid_user_nick_name)) -> User:
     response_model=AccessTokenResponse,
     description="로그인을 수행하고 토큰을 발급받는다.",
 )
-async def login(login_data: Login, response: Response) -> AccessTokenResponse:
-    user = await service.login(login_data)
-    refresh_token_value = await service.create_refresh_token(user_id=user["id"])
+async def login(
+    login_data: Login,
+    response: Response,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> AccessTokenResponse:
+    user = await service.login(db_session=db_session, login_data=login_data)
+    refresh_token_value = await service.create_refresh_token(
+        db_session=db_session, user_id=user["id"]
+    )
 
-    response.set_cookie(**utils.get_refresh_token_settings(refresh_token_value))
+    response.set_cookie(
+        **utils.get_refresh_token_settings(refresh_token=refresh_token_value)
+    )
 
     return AccessTokenResponse(
         access_token=jwt.create_access_token(user=user),
@@ -82,13 +103,16 @@ async def login(login_data: Login, response: Response) -> AccessTokenResponse:
 async def refresh_tokens(
     worker: BackgroundTasks,
     response: Response,
+    db_session: AsyncSession = Depends(get_db_session),
     refresh_token: dict[str, Any] = Depends(valid_refresh_token),
     user: dict[str, Any] = Depends(valid_refresh_token_user),
 ) -> AccessTokenResponse:
     refresh_token_value = await service.create_refresh_token(
-        user_id=refresh_token["user_id"]
+        db_session=db_session, user_id=refresh_token["user_id"]
     )
-    response.set_cookie(**utils.get_refresh_token_settings(refresh_token_value))
+    response.set_cookie(
+        **utils.get_refresh_token_settings(refresh_token=refresh_token_value)
+    )
 
     worker.add_task(service.expire_refresh_token, refresh_token["uuid"])
 
@@ -99,12 +123,18 @@ async def refresh_tokens(
 
 
 @router.delete(
-    Path.LOGOUT, status_code=status.HTTP_200_OK, description="토큰을 만료하여 로그아웃을 수행한다."
+    Path.LOGOUT,
+    status_code=status.HTTP_200_OK,
+    description="토큰을 만료하여 로그아웃을 수행한다.",
 )
 async def logout(
-    response: Response, refresh_token: dict[str, Any] = Depends(valid_refresh_token)
+    response: Response,
+    db_session: AsyncSession = Depends(get_db_session),
+    refresh_token: dict[str, Any] = Depends(valid_refresh_token),
 ) -> None:
-    await service.expire_refresh_token(refresh_token["uuid"])
+    await service.expire_refresh_token(
+        db_session=db_session, refresh_token_uuid=refresh_token["uuid"]
+    )
 
     response.delete_cookie(
         **utils.get_refresh_token_settings(refresh_token["refresh_token"], expired=True)

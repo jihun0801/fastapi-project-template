@@ -1,32 +1,20 @@
-from typing import Any
-
 from sqlalchemy import (
     Boolean,
     Column,
-    CursorResult,
     DateTime,
-    Delete,
     ForeignKey,
     Identity,
-    Insert,
     Integer,
     LargeBinary,
     MetaData,
-    Select,
     String,
     Table,
-    Update,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.asyncio import create_async_engine
 
-from src.config import settings
 from src.constants import DB_NAMING_CONVENTION
 
-DATABASE_URL = str(settings.DATABASE_URL)
-
-engine = create_async_engine(DATABASE_URL)
 metadata = MetaData(naming_convention=DB_NAMING_CONVENTION)
 
 
@@ -44,6 +32,7 @@ auth_user = Table(
     Column("updated_at", DateTime, onupdate=func.now()),
 )
 
+
 auth_refresh_token = Table(
     "auth_refresh_token",
     metadata,
@@ -54,20 +43,3 @@ auth_refresh_token = Table(
     Column("created_at", DateTime, server_default=func.now(), nullable=False),
     Column("updated_at", DateTime, onupdate=func.now()),
 )
-
-
-async def fetch_one(query: Select | Insert | Update) -> dict[str, Any] | None:
-    async with engine.begin() as conn:
-        cursor: CursorResult = await conn.execute(query)
-        return cursor.first()._asdict() if cursor.rowcount > 0 else None
-
-
-async def fetch_all(query: Select | Insert | Update) -> list[dict[str, Any]]:
-    async with engine.begin() as conn:
-        cursor: CursorResult = await conn.execute(query)
-        return [r._asdict() for r in cursor.all()]
-
-
-async def execute(query: Insert | Update | Delete) -> None:
-    async with engine.begin() as conn:
-        await conn.execute(query)
